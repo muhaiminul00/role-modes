@@ -14,11 +14,9 @@ copy-pasted as static per-project files.
 ## Install
 
 ```
-/plugin install role-modes@<your-marketplace-or-repo-source>
+/plugin marketplace add https://github.com/muhaiminul00/role-modes
+/plugin install role-modes@role-modes
 ```
-
-(Exact install command depends on how you've registered this repo as a
-plugin source in your Claude Code setup.)
 
 ## What you get
 

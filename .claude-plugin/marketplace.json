@@ -1,0 +1,30 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "role-modes",
+  "description": "Marketplace for the role-modes plugin - portable three-mode (advisor/commander/execute) operating system for Claude Code.",
+  "owner": {
+    "name": "Muhaiminul Abedin Farhan",
+    "url": "https://github.com/muhaiminul00"
+  },
+  "plugins": [
+    {
+      "name": "role-modes",
+      "source": "./",
+      "description": "Portable three-mode operating system for Claude Code - Advisor (low-effort Q&A), Commander (plan/review), Execute (full build authority) - mode persisted per project, with a bounded auto-handoff pattern between Commander and Execute.",
+      "version": "1.0.0",
+      "author": {
+        "name": "Muhaiminul Abedin Farhan",
+        "url": "https://github.com/muhaiminul00"
+      },
+      "category": "workflow",
+      "keywords": [
+        "workflow",
+        "modes",
+        "planning",
+        "orchestration",
+        "role-based",
+        "build-cards"
+      ]
+    }
+  ]
+}

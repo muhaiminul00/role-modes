@@ -1,0 +1,5 @@
+{
+  "name": "role-modes",
+  "version": "1.0.0",
+  "description": "Portable three-mode operating system for Claude Code - Advisor (low-effort Q&A), Commander (plan/review), Execute (full build authority) - mode persisted per project, with a bounded auto-handoff pattern between Commander and Execute."
+}
