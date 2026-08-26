@@ -35,6 +35,13 @@ No manual setup step after that, at either install scope. Installed for
 one project: it activates Advisor by default the next time Claude Code
 starts there - no first command needed to "turn it on." Installed at user
 scope: the same happens automatically in whatever project you open next.
+**Caveat, stated plainly:** "the next time Claude Code starts there" means
+an actual session boundary - `startup`, `resume`, `compact`, `clear`, or a
+forked session. Running `/plugin install` itself does not trigger it, even
+mid-session - Claude Code has no hook that fires the instant a plugin is
+enabled, only at the next session boundary. If nothing's activated right
+after installing, that's expected; `/clear` (or restarting) is what
+actually kicks it off.
 
 ## What you get
 
