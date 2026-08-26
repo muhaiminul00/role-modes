@@ -195,6 +195,20 @@ without losing context between sessions."
   command file - run it after editing the block's wording, before
   committing.
 
+## Releases
+
+`.claude-plugin/plugin.json`'s `version` field is the single source of truth
+(Claude Code ignores `marketplace.json`'s copy silently if both are set, so
+only `plugin.json` carries one). **A plain commit to `main` is not enough for
+an installed copy to update** - `/plugin update` compares versions and skips
+if they match, so every user-facing change needs a version bump in
+`plugin.json` alongside it, or existing installs stay on the cached version
+forever. Bump on any commit that changes a command, hook behavior, or
+anything else an installed project would notice; a doc-only typo fix doesn't
+need one. A git tag/GitHub Release isn't required for `/plugin update` to
+work, but tagging `vX.Y.Z` after a version bump makes the history easy to
+read.
+
 ## License
 
 MIT
