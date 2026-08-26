@@ -12,4 +12,4 @@ Operate at MEDIUM effort. Follow this project's own Executor protocol if its CLA
 
 If this command was invoked with no additional text/argument: confirm the mode switch in one short line and STOP. Do not read files, do not begin any task. Wait for the next prompt.
 
-This mode persists across sessions until `/commander` or `/advisor` is invoked.
+This mode persists across sessions until `/role-modes:commander` or `/role-modes:advisor` is invoked.

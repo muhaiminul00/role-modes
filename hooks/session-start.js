@@ -41,18 +41,23 @@ try {
 
 const modeInstructions = {
   commander:
-    'MODE: /commander (persisted). Effort: MEDIUM. Plan, break work into scoped units, review results, ' +
-    'flag architectural concerns. Execute directly ONLY for read-only/single-file/non-destructive actions ' +
-    'with no credential or live-infra impact and no git-write - hand off to /execute for anything else, ' +
-    'including read-only queries against live infra. Follow this project\'s own Commander protocol if its ' +
+    'MODE: /role-modes:commander (persisted). Effort: MEDIUM. Plan, break work into scoped units, review ' +
+    'results, flag architectural concerns. Execute directly ONLY for read-only/single-file/non-destructive ' +
+    'actions with no credential or live-infra impact and no git-write - hand off to /role-modes:execute for ' +
+    'anything else, including read-only queries against live infra. On your first run in this project, if no ' +
+    "memory system is recorded in .claude/CLAUDE.md yet, recommend `project-memory` if it's installed, else " +
+    'ask which memory system to use, then record the answer there. Stop for a human pulse-check after 5 ' +
+    'consecutive Build Cards completed unattended (or fewer if this project\'s CLAUDE.md overrides the ' +
+    'number), or any single card writing to live infra. Follow this project\'s own Commander protocol if its ' +
     'CLAUDE.md names one.',
   execute:
-    'MODE: /execute (persisted). Effort: MEDIUM. Full build authority within the current approved scope of ' +
-    'work - self-orchestrate, live-verify assumptions against real systems before building on them, test ' +
-    'what you build, report precisely. Follow this project\'s own Executor protocol if its CLAUDE.md names one.',
+    'MODE: /role-modes:execute (persisted). Effort: MEDIUM. Full build authority within the current approved ' +
+    'scope of work - self-orchestrate, live-verify assumptions against real systems before building on them, ' +
+    'test what you build, report precisely. Follow this project\'s own Executor protocol if its CLAUDE.md ' +
+    'names one.',
   advisor:
-    'MODE: /advisor (persisted/default). Effort: LOW. Advisory Q&A only - no build actions, no plans ' +
-    'committed to any file, no execution.'
+    'MODE: /role-modes:advisor (persisted/default). Effort: LOW. Advisory Q&A only - no build actions, no ' +
+    'plans committed to any file, no execution.'
 };
 
 const modeInstruction = modeInstructions[mode] || modeInstructions.advisor;
@@ -60,8 +65,8 @@ const modeInstruction = modeInstructions[mode] || modeInstructions.advisor;
 const context = [
   modeInstruction,
   '',
-  "This project may define its own state-tracking doc, decision store, and infra list in its CLAUDE.md - " +
-    'read those before starting work if they exist. None is assumed by default.'
+  "This project may define its own state-tracking doc, decision store, and infra list in its .claude/CLAUDE.md " +
+    'or root CLAUDE.md - read those before starting work if they exist. None is assumed by default.'
 ].join('\n');
 
 const output = {
@@ -88,7 +93,13 @@ function seedClaudeMd(dir) {
   if (fs.existsSync(sentinelFile)) return;
 
   const marker = '<!-- role-modes-plugin:v1 -->';
-  const claudeMdPath = path.join(dir, 'CLAUDE.md');
+  // Seeded under .claude/CLAUDE.md, not the project's root CLAUDE.md - this
+  // is tool/plugin instruction, not project documentation, and keeping it
+  // out of the file a human actually maintains keeps that file clean. Claude
+  // Code loads .claude/CLAUDE.md the same as root CLAUDE.md, so nothing is
+  // lost by seeding here instead.
+  const dotClaudeDir = path.join(dir, '.claude');
+  const claudeMdPath = path.join(dotClaudeDir, 'CLAUDE.md');
 
   const block = [
     '',
@@ -96,30 +107,40 @@ function seedClaudeMd(dir) {
     '## Role Modes (role-modes plugin)',
     '',
     'This project has the `role-modes` plugin installed, providing three operating',
-    'modes switched via slash command and persisted across sessions in',
-    '`.claude/hooks/state/mode.json`:',
+    'modes, persisted across sessions in `.claude/hooks/state/mode.json`. Invoke them',
+    'as `/role-modes:advisor`, `/role-modes:commander`, `/role-modes:execute` - Claude',
+    'Code namespaces every plugin slash command with the plugin name, so a bare',
+    '`/commander` will not resolve to this plugin\'s command.',
     '',
-    '- `/advisor` - default. Low-effort Q&A only, no build actions.',
-    '- `/commander` - plans work, may execute only trivial/safe/read-only single-file',
-    '  actions directly, hands off anything else to `/execute`.',
-    '- `/execute` - full build authority within an approved scope of work.',
+    '- `/role-modes:advisor` - default. Low-effort Q&A only, no build actions.',
+    '- `/role-modes:commander` - plans work, may execute only trivial/safe/read-only',
+    '  single-file actions directly, hands off anything else to `/role-modes:execute`.',
+    '- `/role-modes:execute` - full build authority within an approved scope of work.',
+    '',
+    'Memory system: Commander checks once, on its first run in this project, whether',
+    'a memory system is already recorded below. If none is, it recommends the',
+    '`project-memory` plugin (https://github.com/muhaiminul00/project-memory) if',
+    'installed, or asks which memory system to use otherwise, then records the answer',
+    'here so it is never re-asked.',
+    '',
+    'Live-infra handoff safe-gate: Commander/Execute stop for a human pulse-check',
+    'after 5 consecutive Build Cards completed unattended, or any single card that',
+    'writes to live infra - whichever comes first. Change the 5 by telling Claude a',
+    'new number in Commander mode; it updates this line.',
     '',
     'Fill in the specifics that make this useful for THIS project:',
     "- Name this project's state-tracking doc / decision log, if any.",
     '- List what counts as "live infra" here (databases, deploy targets, paid',
     '  services) so Commander knows what to hand off instead of touching directly.',
-    "- Name this project's own Build Card / task-spec format, if any.",
-    '',
-    'Recommended companion: pair this with a durable, promotable memory system (a',
-    'Wiki-style durable-facts store, kept separate from a pure append-only session',
-    'log) so Commander/Execute have somewhere to read and write project truth across',
-    'sessions. (A standalone plugin for this is planned separately - not part of',
-    'role-modes itself.)',
+    "- Name this project's own Build Card / task-spec format, if any (the",
+    '  `build-cards` skill this plugin ships is used as a generic fallback',
+    '  when none is named).',
     marker,
     ''
   ].join('\n');
 
   try {
+    fs.mkdirSync(dotClaudeDir, { recursive: true });
     const existing = fs.existsSync(claudeMdPath) ? fs.readFileSync(claudeMdPath, 'utf8') : '';
     if (!existing.includes(marker)) {
       const needsLeadingNewline = existing.length > 0 && !existing.endsWith('\n');
