@@ -35,13 +35,55 @@ No manual setup step after that, at either install scope. Installed for
 one project: it activates Advisor by default the next time Claude Code
 starts there - no first command needed to "turn it on." Installed at user
 scope: the same happens automatically in whatever project you open next.
+
 **Caveat, stated plainly:** "the next time Claude Code starts there" means
 an actual session boundary - `startup`, `resume`, `compact`, `clear`, or a
 forked session. Running `/plugin install` itself does not trigger it, even
 mid-session - Claude Code has no hook that fires the instant a plugin is
-enabled, only at the next session boundary. If nothing's activated right
-after installing, that's expected; `/clear` (or restarting) is what
-actually kicks it off.
+enabled, only at the next session boundary. If you don't want to wait for
+that (or you're testing the plugin right after installing it), run
+`/role-modes:init` - it does the one-time setup (the `.claude/CLAUDE.md`
+starter block; mode state is already live the moment any `/role-modes:*`
+command runs) immediately, in the current session, with no restart.
+
+## Setup
+
+There's nothing to configure to get a working default. Optional, once
+installed:
+
+1. Run `/role-modes:init` if you want the `.claude/CLAUDE.md` starter block
+   seeded right now instead of waiting for the next session boundary.
+2. Open the seeded block in `.claude/CLAUDE.md` and fill in the three
+   placeholders it leaves (your Build Card format, your state-tracking doc,
+   your "what counts as live infra" list) - or leave them blank and
+   Commander/Execute fall back to generic judgment calls instead.
+3. If you also install [`project-memory`](https://github.com/muhaiminul00/project-memory),
+   Commander notices and recommends it on its first run - nothing to wire up
+   by hand.
+
+## Usage example
+
+A fresh project, right after install, in a live session:
+
+```
+> /role-modes:init
+Created .claude/hooks/state/mode.json ({"mode": "advisor"}).
+Seeded .claude/CLAUDE.md with the role-modes starter block.
+
+> /role-modes:commander
+Mode: /role-modes:commander (persisted).
+
+> Plan out the login page redesign.
+[Commander plans, scopes the work into Build Cards, asks if this project
+has a memory system recorded yet - none found, recommends project-memory -
+then hands off to /role-modes:execute once you approve the scope.]
+```
+
+`mode.json` after that exchange:
+
+```json
+{"mode": "execute"}
+```
 
 ## What you get
 
@@ -51,6 +93,9 @@ actually kicks it off.
   with the `role-modes:` prefix - a bare `/commander` will not resolve to
   this plugin. This is a platform constraint, not something the plugin can
   opt out of.
+- `/role-modes:init` - manual, on-demand setup: seeds the `.claude/CLAUDE.md`
+  starter block right now instead of waiting for the next session boundary.
+  Safe to re-run; does nothing if the block is already there.
 - A `build-cards` skill Commander can use to scope work for Execute, as a
   generic fallback for any project that hasn't defined its own Build
   Card / task-spec format.
@@ -140,6 +185,15 @@ without losing context between sessions."
   Claude's own judgment. `build-cards` is the one skill in this plugin,
   since scoping work is something Commander should reach for on its own
   judgment, not something a human explicitly triggers.
+- **`/role-modes:init` duplicates content, on purpose, with a check.**
+  `commands/init.md` embeds a literal copy of the `.claude/CLAUDE.md`
+  starter block that `hooks/session-start.js` writes - a slash-command has
+  no way to read the hook's own code (`${CLAUDE_PLUGIN_ROOT}` is
+  hooks/MCP/LSP/monitor-only). Rather than trust a comment alone to catch
+  the two drifting apart, `scripts/check-init-sync.js` actually runs the
+  hook against a scratch project and byte-diffs its output against the
+  command file - run it after editing the block's wording, before
+  committing.
 
 ## License
 

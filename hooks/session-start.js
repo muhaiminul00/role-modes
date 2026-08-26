@@ -89,6 +89,12 @@ function seedClaudeMd(dir) {
   // Note: this is a one-time, unversioned seed. If the starter block's
   // content changes in a later plugin version, projects seeded under an
   // earlier version won't be re-seeded or migrated automatically.
+  // MAINTENANCE: commands/init.md carries a literal copy of the block below
+  // (a slash-command can't require() this file - ${CLAUDE_PLUGIN_ROOT} is
+  // only readable from hooks/MCP/LSP/monitor processes, not commands). Keep
+  // both in sync when editing the block's wording, then run
+  // `node scripts/check-init-sync.js` to verify - a comment alone doesn't
+  // catch drift, that script does.
   const sentinelFile = path.join(stateDir, '.claude-md-seeded');
   if (fs.existsSync(sentinelFile)) return;
 
